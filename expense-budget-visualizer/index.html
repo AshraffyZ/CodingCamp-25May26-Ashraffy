@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense & Budget Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+
+    <!-- ═══════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════ -->
+    <header class="header">
+      <div class="header__inner">
+        <div class="header__brand">
+          <div class="header__logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div>
+            <h1 class="header__title">Budget Visualizer</h1>
+            <p class="header__sub">Kelola keuangan kamu</p>
+          </div>
+        </div>
+        <button class="theme-toggle" id="btnToggleTheme" title="Toggle theme" aria-label="Toggle dark mode">
+          <span class="theme-toggle__icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════
+         MAIN
+    ═══════════════════════════════════════ -->
+    <main class="main">
+
+      <!-- ── HERO BALANCE ── -->
+      <section class="hero" aria-label="Balance overview">
+        <div class="hero__balance">
+          <p class="hero__label">Total Saldo</p>
+          <h2 class="hero__value" id="totalBalance">Rp 0</h2>
+          <p class="hero__hint">Pemasukan dikurangi pengeluaran</p>
+        </div>
+        <div class="hero__stats">
+          <div class="stat stat--income">
+            <div class="stat__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <div>
+              <p class="stat__label">Pemasukan</p>
+              <p class="stat__value" id="totalIncome">Rp 0</p>
+            </div>
+          </div>
+          <div class="stat stat--expense">
+            <div class="stat__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            </div>
+            <div>
+              <p class="stat__label">Pengeluaran</p>
+              <p class="stat__value" id="totalExpense">Rp 0</p>
+            </div>
+          </div>
+          <div class="stat stat--total">
+            <div class="stat__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            </div>
+            <div>
+              <p class="stat__label">Total Spending</p>
+              <p class="stat__value" id="totalSpending">Rp 0</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── BUDGET PROGRESS ── -->
+      <section class="card" aria-label="Budget limit">
+        <div class="card__head">
+          <div class="card__head-icon card__head-icon--purple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h2 class="card__title">Batas Budget Bulanan</h2>
+        </div>
+        <div class="budget-form">
+          <div class="input-wrap">
+            <span class="input-prefix">Rp</span>
+            <input
+              type="text"
+              id="budgetLimit"
+              class="input input--prefix"
+              placeholder="0"
+              inputmode="numeric"
+              autocomplete="off"
+              aria-label="Batas budget bulanan"
+            />
+          </div>
+          <button class="btn btn--primary" id="btnSetBudget">Simpan</button>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div class="progress-fill" id="budgetProgress"></div>
+          </div>
+          <span class="progress-label" id="budgetProgressLabel">Belum ada batas budget</span>
+        </div>
+        <!-- Budget warning banner — shown by JS when >= 75% -->
+        <div class="budget-warning" id="budgetWarning" role="alert" aria-live="polite"></div>
+      </section>
+
+      <!-- ── ADD TRANSACTION ── -->
+      <section class="card" aria-label="Add transaction">
+        <div class="card__head">
+          <div class="card__head-icon card__head-icon--indigo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <h2 class="card__title">Tambah Transaksi</h2>
+        </div>
+
+        <!-- Type Toggle -->
+        <div class="type-toggle" role="group" aria-label="Tipe transaksi">
+          <label class="type-toggle__option">
+            <input type="radio" name="txTypeRadio" value="expense" checked />
+            <span class="type-toggle__label type-toggle__label--expense">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+              Pengeluaran
+            </span>
+          </label>
+          <label class="type-toggle__option">
+            <input type="radio" name="txTypeRadio" value="income" />
+            <span class="type-toggle__label type-toggle__label--income">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+              Pemasukan
+            </span>
+          </label>
+        </div>
+
+        <form class="form" id="transactionForm" novalidate>
+          <!-- Hidden select kept for JS compatibility -->
+          <select id="txType" class="visually-hidden" aria-hidden="true" tabindex="-1">
+            <option value="expense">Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+
+          <div class="form__group">
+            <label class="form__label" for="txDesc">Nama Item</label>
+            <input
+              type="text"
+              id="txDesc"
+              class="input"
+              placeholder="Contoh: Makan siang, Gaji bulan ini…"
+              required
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form__row">
+            <div class="form__group">
+              <label class="form__label" for="txAmount">Jumlah</label>
+              <div class="input-wrap">
+                <span class="input-prefix">Rp</span>
+                <input
+                  type="text"
+                  id="txAmount"
+                  class="input input--prefix"
+                  placeholder="0"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form__group">
+              <label class="form__label" for="txDate">Tanggal</label>
+              <input type="date" id="txDate" class="input" required />
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label class="form__label" for="txCategory">Kategori</label>
+            <div class="select-wrap">
+              <select id="txCategory" class="input select">
+                <option value="Makanan">🍔 Makanan</option>
+                <option value="Transportasi">🚗 Transportasi</option>
+                <option value="Belanja">🛍️ Belanja</option>
+                <option value="Hiburan">🎮 Hiburan</option>
+                <option value="Kesehatan">💊 Kesehatan</option>
+                <option value="Tagihan">📄 Tagihan</option>
+                <option value="Gaji">💼 Gaji</option>
+                <option value="Lainnya">📦 Lainnya</option>
+              </select>
+              <span class="select-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--full btn--lg">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Transaksi
+          </button>
+        </form>
+      </section>
+
+      <!-- ── CHARTS ── -->
+      <section class="card" aria-label="Charts">
+        <div class="card__head">
+          <div class="card__head-icon card__head-icon--blue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h2 class="card__title">Visualisasi</h2>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-panel">
+            <p class="chart-panel__title">Pengeluaran per Kategori</p>
+            <div class="chart-wrap">
+              <canvas id="chartDoughnut" aria-label="Pie chart pengeluaran per kategori"></canvas>
+              <div class="chart-empty" id="chartDoughnutEmpty">
+                <span>Belum ada data</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-panel">
+            <p class="chart-panel__title">Tren Bulanan</p>
+            <div class="chart-wrap chart-wrap--bar">
+              <canvas id="chartBar" aria-label="Bar chart tren bulanan"></canvas>
+              <div class="chart-empty" id="chartBarEmpty">
+                <span>Belum ada data</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TRANSACTION HISTORY ── -->
+      <section class="card" aria-label="Transaction history">
+        <div class="card__head card__head--between">
+          <div class="card__head-left">
+            <div class="card__head-icon card__head-icon--green">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </div>
+            <h2 class="card__title">Riwayat Transaksi</h2>
+          </div>
+          <button class="btn btn--ghost btn--sm btn--danger-ghost" id="btnClearAll" title="Hapus semua transaksi">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Hapus Semua
+          </button>
+        </div>
+
+        <!-- Filters + Sort -->
+        <div class="filters">
+          <div class="select-wrap select-wrap--sm">
+            <select id="filterType" class="input select select--sm" aria-label="Filter tipe">
+              <option value="all">Semua Tipe</option>
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+            </select>
+            <span class="select-arrow select-arrow--sm">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </div>
+          <div class="select-wrap select-wrap--sm">
+            <select id="filterCategory" class="input select select--sm" aria-label="Filter kategori">
+              <option value="all">Semua Kategori</option>
+            </select>
+            <span class="select-arrow select-arrow--sm">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </div>
+          <div class="select-wrap select-wrap--sm">
+            <select id="sortBy" class="input select select--sm" aria-label="Urutkan">
+              <option value="date-desc">Terbaru</option>
+              <option value="date-asc">Terlama</option>
+              <option value="amount-desc">Nominal ↓</option>
+              <option value="amount-asc">Nominal ↑</option>
+              <option value="category-asc">Kategori A–Z</option>
+              <option value="category-desc">Kategori Z–A</option>
+            </select>
+            <span class="select-arrow select-arrow--sm">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- List -->
+        <ul class="tx-list" id="txList" aria-live="polite"></ul>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-state__icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <p class="empty-state__title">Belum ada transaksi</p>
+          <p class="empty-state__sub">Tambahkan transaksi pertama kamu di atas</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════ -->
+    <footer class="footer">
+      <p>© 2026 Budget Visualizer · Data tersimpan di browser kamu</p>
+    </footer>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
